@@ -20,31 +20,72 @@
   - `Pillow` - 图像处理和 OCR
   - `tkinter` - 图形界面（Python 自带）
 
-## 安装步骤
+## 安装配置
 
-1. **克隆或下载项目**
-   ```bash
-   git clone <项目地址>
-   cd swjtu-course-enroll
-   ```
+
+### 方式一：使用 pip
+
+如果你习惯使用 pip ，可以按以下步骤操作。
+
+1. **创建虚拟环境（推荐，可以省略）**
+
+```bash
+# 创建虚拟环境
+python3 -m venv venv
+
+# 激活虚拟环境
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+```
 
 2. **安装依赖**
-   ```bash
-   pip install requests beautifulsoup4 pillow
-   ```
 
+```bash
+pip install -r requirements.txt
+```
 
-## 使用教程
-
-### 1. 启动程序
+3. **运行**
 
 ```bash
 python main.py
 ```
 
-程序会打开图形化界面。
+### 方式二：使用 uv
 
-### 2. 登录账号
+[uv](https://github.com/astral-sh/uv) 是一个快速的 Python 包管理工具。
+
+1. **安装 uv**
+
+```bash
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 或使用 Homebrew (macOS)
+brew install uv
+```
+
+2. **安装项目依赖**
+
+```bash
+cd swjtu-course-enroll # 进入项目目录
+uv sync
+```
+
+3. **运行脚本**
+
+```bash
+uv run ./main.py
+```
+
+
+## 使用教程
+
+### 1. 登录账号
 
 
 - **学号**：输入你的学号（如 `2023112590`）
@@ -58,7 +99,7 @@ python main.py
 3. 尝试登录两个系统
 4. 显示登录状态：`✓ URL1 | ✓ URL2`（绿色表示成功）
 
-### 3. 添加课程
+### 2. 添加课程
 
 1. 在 **选课编号** 输入框输入选课编号（如 `B2766`）
 2. 在 **备注** 输入框可选填说明，防止你自己忘记选课编号对应的课程，也可以不填写
@@ -67,7 +108,7 @@ python main.py
 
 程序会自动查询该课程的真实 ID 并添加到选课列表。
 
-### 4. 管理课程列表
+### 3. 管理课程列表
 
 课程列表显示：
 - **选课编号**：你输入的课程编号
@@ -81,7 +122,7 @@ python main.py
 - **清除已选状态**：将所有课程的"已选上"状态重置为"未选"
 - **刷新列表**：重新从配置文件加载课程
 
-### 5. 开始抢课
+### 4. 开始抢课
 
 1. **设置重试间隔**：每轮抢课之间的等待时间（秒），建议 0.5-1 秒
 2. **设置最大并发数量**：推荐设置为需要抢的课程数量的 6 倍，默认 20
@@ -118,7 +159,7 @@ python main.py
 
 2. **停止抢课**：随时点击 **停止抢课** 按钮
 
-### 6. 配置文件说明
+### 5. 配置文件说明
 
 程序会自动在项目目录生成 config.json：
 
