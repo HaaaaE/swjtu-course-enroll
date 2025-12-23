@@ -25,6 +25,8 @@ class CourseGrabberGUI:
         self.update_status()
         self.load_course_list()
         
+        self.root.focus_force()
+        
     def load_config(self):
         """加载配置文件"""
         if os.path.exists(self.config_file):
