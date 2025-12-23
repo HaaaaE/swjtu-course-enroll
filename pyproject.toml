@@ -1,0 +1,14 @@
+[project]
+name = "swjtu-course-enroll"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.12.*"
+dependencies = [
+    #"azure-functions>=1.24.0",
+    "bs4==0.0.2",
+    "fastapi==0.99.1",
+    "pillow==10.1.0",
+    "requests==2.32.5",
+    "upstash-redis==1.5.0",
+]
