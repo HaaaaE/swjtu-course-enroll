@@ -11,8 +11,8 @@ from utils.jwc import Enroller
 class CourseGrabberGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("西南交大选课助手 v1.0")
-        self.root.geometry("1000x650")
+        self.root.title("西南交大选课助手")
+        self.root.geometry("1150x750")
         
         self.config_file = "config.json"
         self.enroller1 = None  # jwc.swjtu.edu.cn
@@ -84,7 +84,7 @@ class CourseGrabberGUI:
         
         ttk.Label(row2, text="备注:").pack(side=tk.LEFT, padx=(0, 5))
         self.remark_var = tk.StringVar()
-        ttk.Entry(row2, textvariable=self.remark_var, width=30).pack(side=tk.LEFT, padx=(0, 20))
+        ttk.Entry(row2, textvariable=self.remark_var, width=20).pack(side=tk.LEFT, padx=(0, 20))
         
         self.need_book_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(row2, text="需要教材", variable=self.need_book_var).pack(side=tk.LEFT, padx=(0, 20))
@@ -92,20 +92,16 @@ class CourseGrabberGUI:
         ttk.Button(row2, text="查询课程", command=self.search_course, width=10).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(row2, text="添加到列表", command=self.add_course, width=12).pack(side=tk.LEFT)
         
-        # === 中间区域：左边是课程列表，右边是日志 ===
-        middle_frame = ttk.Frame(self.root)
-        middle_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # 左侧：课程列表
-        left_frame = ttk.LabelFrame(middle_frame, text="选课列表", padding="5")
-        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
+        # === 上方区域：选课列表 ===
+        top_frame = ttk.LabelFrame(self.root, text="选课列表", padding="5")
+        top_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
         # 创建表格
-        tree_frame = ttk.Frame(left_frame)
+        tree_frame = ttk.Frame(top_frame)
         tree_frame.pack(fill=tk.BOTH, expand=True)
         
         columns = ("选课编号", "真实ID", "备注", "需要教材", "状态")
-        self.course_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=12)
+        self.course_tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=3)
         
         # 设置列
         self.course_tree.heading("选课编号", text="选课编号")
@@ -116,7 +112,7 @@ class CourseGrabberGUI:
         
         self.course_tree.column("选课编号", width=70, anchor=tk.CENTER)
         self.course_tree.column("真实ID", width=110, anchor=tk.CENTER)
-        self.course_tree.column("备注", width=150, anchor=tk.W)
+        self.course_tree.column("备注", width=100, anchor=tk.W)
         self.course_tree.column("需要教材", width=70, anchor=tk.CENTER)
         self.course_tree.column("状态", width=70, anchor=tk.CENTER)
         
@@ -128,29 +124,29 @@ class CourseGrabberGUI:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         # 列表操作按钮
-        list_btn_frame = ttk.Frame(left_frame)
+        list_btn_frame = ttk.Frame(top_frame)
         list_btn_frame.pack(fill=tk.X, pady=(5, 0))
         
         ttk.Button(list_btn_frame, text="删除选中", command=self.remove_course).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(list_btn_frame, text="清除已选状态", command=self.clear_selected_status).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(list_btn_frame, text="刷新列表", command=self.load_course_list).pack(side=tk.LEFT)
         
-        # 右侧：日志区域（分两列）
-        right_frame = ttk.Frame(middle_frame)
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        # === 下方区域：两个日志并排 ===
+        bottom_frame = ttk.Frame(self.root)
+        bottom_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
         # 左侧日志：系统日志
-        system_log_frame = ttk.LabelFrame(right_frame, text="系统日志", padding="5")
+        system_log_frame = ttk.LabelFrame(bottom_frame, text="系统日志", padding="5")
         system_log_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
         
-        self.log_text = scrolledtext.ScrolledText(system_log_frame, width=25, height=15, state='disabled', wrap=tk.WORD)
+        self.log_text = scrolledtext.ScrolledText(system_log_frame, width=40, height=13, state='disabled', wrap=tk.WORD)
         self.log_text.pack(fill=tk.BOTH, expand=True)
         
         # 右侧日志：选课结果
-        result_log_frame = ttk.LabelFrame(right_frame, text="选课结果", padding="5")
+        result_log_frame = ttk.LabelFrame(bottom_frame, text="选课结果", padding="5")
         result_log_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         
-        self.result_log_text = scrolledtext.ScrolledText(result_log_frame, width=25, height=15, state='disabled', wrap=tk.WORD)
+        self.result_log_text = scrolledtext.ScrolledText(result_log_frame, width=40, height=13, state='disabled', wrap=tk.WORD)
         self.result_log_text.pack(fill=tk.BOTH, expand=True)
         
         # === 抢课控制区域 ===
