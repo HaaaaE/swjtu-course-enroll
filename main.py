@@ -33,8 +33,8 @@ class CourseGrabberGUI:
                     return json.load(f)
             except Exception as e:
                 messagebox.showerror("错误", f"加载配置文件失败: {e}")
-                return {"username": "", "password": "", "courses": []}
-        return {"username": "", "password": "", "courses": []}
+                return {"username": "", "password": "", "courses": [], "max_workers": 20}
+        return {"username": "", "password": "", "courses": [], "max_workers": 20}
     
     def save_config(self):
         """保存配置到文件"""
@@ -135,12 +135,23 @@ class CourseGrabberGUI:
         ttk.Button(list_btn_frame, text="清除已选状态", command=self.clear_selected_status).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(list_btn_frame, text="刷新列表", command=self.load_course_list).pack(side=tk.LEFT)
         
-        # 右侧：运行日志
-        log_frame = ttk.LabelFrame(middle_frame, text="运行日志", padding="5")
-        log_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        # 右侧：日志区域（分两列）
+        right_frame = ttk.Frame(middle_frame)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         
-        self.log_text = scrolledtext.ScrolledText(log_frame, width=45, height=15, state='disabled', wrap=tk.WORD)
+        # 左侧日志：系统日志
+        system_log_frame = ttk.LabelFrame(right_frame, text="系统日志", padding="5")
+        system_log_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
+        
+        self.log_text = scrolledtext.ScrolledText(system_log_frame, width=25, height=15, state='disabled', wrap=tk.WORD)
         self.log_text.pack(fill=tk.BOTH, expand=True)
+        
+        # 右侧日志：选课结果
+        result_log_frame = ttk.LabelFrame(right_frame, text="选课结果", padding="5")
+        result_log_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        
+        self.result_log_text = scrolledtext.ScrolledText(result_log_frame, width=25, height=15, state='disabled', wrap=tk.WORD)
+        self.result_log_text.pack(fill=tk.BOTH, expand=True)
         
         # === 抢课控制区域 ===
         control_frame = ttk.LabelFrame(self.root, text="抢课控制", padding="10")
@@ -153,6 +164,10 @@ class CourseGrabberGUI:
         self.interval_var = tk.DoubleVar(value=2.0)
         ttk.Spinbox(row3, from_=0.1, to=10, increment=0.1, textvariable=self.interval_var, width=10, format="%.1f").pack(side=tk.LEFT, padx=(0, 30))
         
+        ttk.Label(row3, text="最大并发数量:").pack(side=tk.LEFT, padx=(0, 5))
+        self.max_workers_var = tk.IntVar(value=self.config.get("max_workers", 20))
+        ttk.Spinbox(row3, from_=1, to=100, increment=1, textvariable=self.max_workers_var, width=10).pack(side=tk.LEFT, padx=(0, 30))
+        
         self.start_btn = ttk.Button(row3, text="开始抢课", command=self.start_grabbing, width=12)
         self.start_btn.pack(side=tk.LEFT, padx=(0, 10))
         
@@ -160,11 +175,18 @@ class CourseGrabberGUI:
         self.stop_btn.pack(side=tk.LEFT)
         
     def log(self, message):
-        """添加日志"""
+        """添加系统日志"""
         self.log_text.config(state='normal')
         self.log_text.insert(tk.END, f"{time.strftime('%H:%M:%S')} - {message}\n")
         self.log_text.see(tk.END)
         self.log_text.config(state='disabled')
+    
+    def result_log(self, message):
+        """添加选课结果日志"""
+        self.result_log_text.config(state='normal')
+        self.result_log_text.insert(tk.END, f"{time.strftime('%H:%M:%S')} - {message}\n")
+        self.result_log_text.see(tk.END)
+        self.result_log_text.config(state='disabled')
     
     def update_status(self):
         """更新登录状态"""
@@ -375,7 +397,14 @@ class CourseGrabberGUI:
         self.is_grabbing = True
         self.start_btn.config(state='disabled')
         self.stop_btn.config(state='normal')
+        
+        # 保存最大并发数量设置
+        max_workers = self.max_workers_var.get()
+        self.config["max_workers"] = max_workers
+        self.save_config()
+        
         self.log("=== 开始抢课 ===")
+        self.log(f"最大并发数量: {max_workers}")
         
         def grab_thread():
             round_num = 1
@@ -395,26 +424,31 @@ class CourseGrabberGUI:
                 remark = course["remark"]
                 need_book = course["need_book"]
                 
-                self.log(f"[第{round_num}轮-{url_name}] 正在处理: {teach_id} ({remark})")
+                # 使用线程安全的方式记录"正在处理"日志
+                self.root.after(0, lambda tid=teach_id, r=remark, rn=round_num, un=url_name: 
+                                self.log(f"[第{rn}轮-{un}] 正在处理: {tid} ({r})"))
                 
                 try:
                     success, message = enroller.select_course(real_teach_id, need_book)
                     
                     if success:
-                        self.log(f"[第{round_num}轮-{url_name}] ✓ 选课成功: {teach_id} - {message}")
+                        self.root.after(0, lambda tid=teach_id, msg=message, rn=round_num, un=url_name: 
+                                        self.result_log(f"[第{rn}轮-{un}] ✓ 选课成功: {tid} - {msg}"))
                         course["selected"] = True
                         self.save_config()
                         self.root.after(0, self.load_course_list)
                     else:
-                        self.log(f"[第{round_num}轮-{url_name}] ✗ 选课失败: {teach_id} - {message}")
+                        self.root.after(0, lambda tid=teach_id, msg=message, rn=round_num, un=url_name: 
+                                        self.result_log(f"[第{rn}轮-{un}] ✗ 选课失败: {tid} - {msg}"))
                     
                     return success
                 except Exception as e:
-                    self.log(f"[第{round_num}轮-{url_name}] ✗ 选课异常: {teach_id} - {e}")
+                    self.root.after(0, lambda tid=teach_id, err=str(e), rn=round_num, un=url_name: 
+                                    self.result_log(f"[第{rn}轮-{un}] ✗ 选课异常: {tid} - {err}"))
                     return False
             
             # 创建持久的线程池
-            executor = ThreadPoolExecutor(max_workers=20)
+            executor = ThreadPoolExecutor(max_workers=max_workers)
             
             try:
                 while self.is_grabbing:
