@@ -99,7 +99,8 @@ uv run ./main.py
 ### 2. 添加课程
 
 1. 在 **选课编号** 输入框输入选课编号（如 `B3333`）
-   示例：图中红色框选部分为选课编号：
+   
+   示例: 图中红色框选部分即为选课编号（一个大写字母+四个数字）
    <img width="1634" height="682" alt="image" src="https://github.com/user-attachments/assets/430f44ba-2d07-458c-87ee-f17633e0b871" />
    
 
