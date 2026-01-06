@@ -10,5 +10,5 @@ wheels/
 .venv
 
 config.json
-
+*config*.json
 .DS_Store
